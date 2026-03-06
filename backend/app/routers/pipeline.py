@@ -1,7 +1,9 @@
 from __future__ import annotations
 import asyncio
+import io
 import json
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import AsyncGenerator
@@ -66,7 +68,65 @@ async def get_job_file(job_id: str, filename: str):
         raise HTTPException(status_code=403, detail="Access denied")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
-    return PlainTextResponse(file_path.read_text(encoding="utf-8"))
+    content_type = "text/markdown; charset=utf-8" if filename.endswith(".md") else "text/plain; charset=utf-8"
+    return PlainTextResponse(
+        file_path.read_text(encoding="utf-8"),
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{job_id}/assets.zip")
+async def download_assets_zip(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job_dir = settings.jobs_path / job_id
+    buf = io.BytesIO()
+
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        # Visual files
+        media_dir = job_dir / "media"
+        if media_dir.exists():
+            for f in sorted(media_dir.iterdir()):
+                if f.is_file():
+                    zf.write(f, f"visual/{f.name}")
+
+        # Audio files
+        audio_dir = job_dir / "audio"
+        if audio_dir.exists():
+            for f in sorted(audio_dir.iterdir()):
+                if f.is_file():
+                    zf.write(f, f"audio/{f.name}")
+
+        # subtitles.txt — generated from timeline
+        if job.timeline:
+            sub_track = next(
+                (t for t in job.timeline.tracks if t.track_type == "subtitle"), None
+            )
+            if sub_track:
+                def _fmt(s: float) -> str:
+                    m, sec = divmod(int(s), 60)
+                    return f"{m}:{sec:02d}" if m else f"{sec}s"
+                lines = [
+                    f"[{_fmt(c.start_s)} – {_fmt(c.start_s + c.duration_s)}]\n{c.subtitle_text or ''}"
+                    for c in sub_track.clips
+                ]
+                zf.writestr("other/subtitles.txt", "\n\n".join(lines))
+
+        # skills.md and brand.md
+        for md_file in ("skills.md", "brand.md"):
+            path = job_dir / md_file
+            if path.exists():
+                zf.write(path, f"other/{md_file}")
+
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="good-news-assets-{job_id[:8]}.zip"'},
+    )
 
 
 @router.get("/{job_id}/stream")

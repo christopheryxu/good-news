@@ -14,7 +14,7 @@ import {
   Check,
 } from "lucide-react";
 import { useTimelineStore } from "@/store/timelineStore";
-import { getMediaUrl, getJobFileUrl } from "@/lib/api";
+import { getMediaUrl, getJobFileUrl, getAssetsZipUrl } from "@/lib/api";
 
 type DownloadState = "idle" | "loading" | "done";
 
@@ -138,31 +138,14 @@ export default function AssetsPanel() {
 
   const handleDownloadAll = async () => {
     setDlState("loading");
-    const entries: { url: string; filename: string }[] = [
-      ...visualClips
-        .filter((c) => c.local_path)
-        .map((c) => {
-          const filename = c.local_path!.split(/[\\/]/).pop()!;
-          return { url: getMediaUrl(jobId, "media", filename), filename };
-        }),
-      ...audioClips
-        .filter((c) => c.audio_path)
-        .map((c) => {
-          const filename = c.audio_path!.split(/[\\/]/).pop()!;
-          return { url: getMediaUrl(jobId, "audio", filename), filename };
-        }),
-    ];
-
-    for (const { url, filename } of entries) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
+    const a = document.createElement("a");
+    a.href = getAssetsZipUrl(jobId);
+    a.download = `good-news-assets-${jobId.slice(0, 8)}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Give the browser a moment to start the download before resetting state
+    await new Promise((r) => setTimeout(r, 800));
     setDlState("done");
     setTimeout(() => setDlState("idle"), 2500);
   };

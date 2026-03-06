@@ -56,3 +56,7 @@ export function getDownloadUrl(jobId: string): string {
 export function getJobFileUrl(jobId: string, filename: string): string {
   return `/api/pipeline/${jobId}/file/${encodeURIComponent(filename)}`;
 }
+
+export function getAssetsZipUrl(jobId: string): string {
+  return `/api/pipeline/${jobId}/assets.zip`;
+}
