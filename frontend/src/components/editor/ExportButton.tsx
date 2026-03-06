@@ -13,26 +13,6 @@ export default function ExportButton({ jobId }: Props) {
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-3">
-        {/* Progress bar — visible while exporting, fills to 100 then disappears */}
-        {isExporting && (
-          <div className="flex items-center gap-2">
-            <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#C4842A] rounded-full"
-                style={{
-                  width: `${exportProgress}%`,
-                  transition: exportProgress >= 100
-                    ? "width 0.6s ease-in-out"
-                    : "width 1s linear",
-                }}
-              />
-            </div>
-            <span className="text-xs text-gray-400 whitespace-nowrap">
-              {exportProgress}%
-            </span>
-          </div>
-        )}
-
         <button
           onClick={triggerExport}
           disabled={isExporting}

@@ -25,10 +25,10 @@ def _persist_job(job: Job) -> None:
     job_dir = settings.jobs_path / job.id
     job_dir.mkdir(parents=True, exist_ok=True)
     job_file = job_dir / "job.json"
-    job_file.write_text(job.model_dump_json(indent=2))
+    job_file.write_text(job.model_dump_json(indent=2), encoding="utf-8")
     if job.timeline:
         timeline_file = job_dir / "timeline.json"
-        timeline_file.write_text(job.timeline.model_dump_json(indent=2))
+        timeline_file.write_text(job.timeline.model_dump_json(indent=2), encoding="utf-8")
 
 
 def update_timeline(job_id: str, timeline: Timeline) -> Optional[Job]:
@@ -51,7 +51,7 @@ def hydrate_from_disk() -> None:
         job_file = job_dir / "job.json"
         if job_file.exists():
             try:
-                job = Job.model_validate_json(job_file.read_text())
+                job = Job.model_validate_json(job_file.read_text(encoding="utf-8"))
                 _jobs[job.id] = job
             except Exception:
                 pass

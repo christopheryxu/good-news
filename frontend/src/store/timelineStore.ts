@@ -61,14 +61,6 @@ export const useTimelineStore = create<TimelineState>()(
               }
             }
 
-            // Keep the paired audio clip in sync when a subtitle clip is moved
-            if (track.track_type === "subtitle" && clip.section_id && actualDelta !== 0) {
-              const audioTrack = s.timeline.tracks.find((t) => t.track_type === "audio");
-              if (audioTrack) {
-                const audioClip = audioTrack.clips.find((c) => c.section_id === clip.section_id);
-                if (audioClip) audioClip.start_s = newStart;
-              }
-            }
             break;
           }
         }
@@ -104,33 +96,38 @@ export const useTimelineStore = create<TimelineState>()(
     updateAudioDurations: (sectionDurations) => {
       set((s) => {
         if (!s.timeline) return;
-        const audioTrack = s.timeline.tracks.find((t) => t.track_type === "audio");
-        if (!audioTrack) return;
+        const voiceTrack = s.timeline.tracks.find((t) => t.track_type === "voice");
+        if (!voiceTrack) return;
 
         let cursor = 0;
-        for (const audioClip of audioTrack.clips) {
-          const sectionId = audioClip.section_id;
-          if (!sectionId) { cursor += audioClip.duration_s; continue; }
+        for (const voiceClip of voiceTrack.clips) {
+          const sectionId = voiceClip.section_id;
+          if (!sectionId) { cursor += voiceClip.duration_s; continue; }
 
-          const newDuration = sectionDurations[sectionId] ?? audioClip.duration_s;
-          const oldDuration = audioClip.duration_s;
+          const newDuration = sectionDurations[sectionId] ?? voiceClip.duration_s;
+          const oldDuration = voiceClip.duration_s;
           const scale = oldDuration > 0 ? newDuration / oldDuration : 1;
 
+          // Update voice clip itself
+          const oldClipStart = voiceClip.start_s;
+          voiceClip.start_s = cursor;
+          voiceClip.duration_s = newDuration;
+          if (voiceClip.cues && voiceClip.cues.length > 0) {
+            for (const cue of voiceClip.cues) {
+              const relStart = cue.start_s - oldClipStart;
+              const relEnd = cue.end_s - oldClipStart;
+              cue.start_s = cursor + relStart * scale;
+              cue.end_s = cursor + relEnd * scale;
+            }
+          }
+
+          // Update matching visual clips
           for (const track of s.timeline.tracks) {
+            if (track.track_type === "voice") continue;
             for (const clip of track.clips) {
               if (clip.section_id !== sectionId) continue;
-              const oldClipStart = clip.start_s;
               clip.start_s = cursor;
               clip.duration_s = newDuration;
-              // Scale subtitle cue timings proportionally
-              if (clip.cues && clip.cues.length > 0) {
-                for (const cue of clip.cues) {
-                  const relStart = cue.start_s - oldClipStart;
-                  const relEnd = cue.end_s - oldClipStart;
-                  cue.start_s = cursor + relStart * scale;
-                  cue.end_s = cursor + relEnd * scale;
-                }
-              }
             }
           }
           cursor += newDuration;

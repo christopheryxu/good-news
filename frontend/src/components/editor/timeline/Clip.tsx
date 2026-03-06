@@ -9,6 +9,7 @@ import type { Clip as ClipType } from "@/types/timeline";
 
 const TRACK_COLORS: Record<string, string> = {
   visual:   "bg-blue-100 border-blue-300 hover:bg-blue-200",
+  voice:    "bg-violet-100 border-violet-300 hover:bg-violet-200",
   audio:    "bg-emerald-100 border-emerald-300 hover:bg-emerald-200",
   subtitle: "bg-violet-100 border-violet-300 hover:bg-violet-200",
 };

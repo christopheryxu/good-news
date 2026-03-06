@@ -18,7 +18,7 @@ export interface SubtitleCue {
 
 export interface Clip {
   id: string;
-  clip_type: "visual" | "audio" | "subtitle";
+  clip_type: "visual" | "audio" | "subtitle" | "voice";
   section_id: string;
   start_s: number;
   duration_s: number;
@@ -34,7 +34,7 @@ export interface Clip {
 
 export interface Track {
   id: string;
-  track_type: "visual" | "audio" | "subtitle";
+  track_type: "visual" | "audio" | "subtitle" | "voice";
   clips: Clip[];
 }
 

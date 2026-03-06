@@ -7,6 +7,7 @@ import type { Track } from "@/types/timeline";
 
 const TRACK_LABELS: Record<string, string> = {
   visual: "Visual",
+  voice: "Voice",
   subtitle: "Voice",
 };
 

@@ -11,7 +11,7 @@ from ..models.pipeline import (
 from ..services import job_store
 from ..services.scraper import fetch_html, extract_sections, detect_paywall, extract_brand_colors
 from ..services import claude_service, pexels_service
-from ..services import stability_service as imagen_service
+from ..services import google_service as imagen_service
 from ..services import elevenlabs_service
 
 
@@ -254,8 +254,7 @@ async def _generate_scene_media(sec: Section, media_dir: Path) -> MediaAsset | N
 
 def _build_initial_timeline(job: Job, section_word_timestamps: dict[str, list] | None = None) -> Timeline:
     visual_clips: list[Clip] = []
-    audio_clips: list[Clip] = []
-    subtitle_clips: list[Clip] = []
+    voice_clips: list[Clip] = []
 
     media_by_section = {a.section_id: a for a in job.media_assets}
     audio_by_section = {a.section_id: a for a in job.audio_assets}
@@ -278,28 +277,19 @@ def _build_initial_timeline(job: Job, section_word_timestamps: dict[str, list] |
                 local_path=media.local_path,
             ))
 
-        if audio and audio.local_path:
-            audio_clips.append(Clip(
-                id=str(uuid.uuid4()),
-                clip_type="audio",
-                section_id=sec.id,
-                start_s=cursor,
-                duration_s=duration,
-                audio_path=audio.local_path,
-            ))
-
         words = (section_word_timestamps or {}).get(sec.id, [])
         if words:
             cues = _build_subtitle_cues_from_words(words, cursor)
         else:
             cues = _build_subtitle_cues(sec.voice_script, cursor, duration)
 
-        subtitle_clips.append(Clip(
+        voice_clips.append(Clip(
             id=str(uuid.uuid4()),
-            clip_type="subtitle",
+            clip_type="voice",
             section_id=sec.id,
             start_s=cursor,
             duration_s=duration,
+            audio_path=audio.local_path if audio and audio.local_path else None,
             subtitle_text=sec.voice_script,
             cues=cues,
         ))
@@ -307,9 +297,8 @@ def _build_initial_timeline(job: Job, section_word_timestamps: dict[str, list] |
         cursor += duration
 
     tracks = [
-        Track(id="visual",   track_type="visual",   clips=visual_clips),
-        Track(id="audio",    track_type="audio",    clips=audio_clips),
-        Track(id="subtitle", track_type="subtitle", clips=subtitle_clips),
+        Track(id="visual", track_type="visual", clips=visual_clips),
+        Track(id="voice",  track_type="voice",  clips=voice_clips),
     ]
 
     return Timeline(

@@ -103,7 +103,7 @@ async def download_assets_zip(job_id: str):
         # subtitles.txt — generated from timeline
         if job.timeline:
             sub_track = next(
-                (t for t in job.timeline.tracks if t.track_type == "subtitle"), None
+                (t for t in job.timeline.tracks if t.track_type in ("voice", "subtitle")), None
             )
             if sub_track:
                 def _fmt(s: float) -> str:

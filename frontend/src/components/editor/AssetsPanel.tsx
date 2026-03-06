@@ -123,11 +123,12 @@ export default function AssetsPanel() {
 
   const jobId = timeline.job_id;
   const visualTrack   = timeline.tracks.find((t) => t.track_type === "visual");
-  const audioTrack    = timeline.tracks.find((t) => t.track_type === "audio");
-  const subtitleTrack = timeline.tracks.find((t) => t.track_type === "subtitle");
+  const voiceTrack    = timeline.tracks.find((t) => t.track_type === "voice");
+  const audioTrack    = voiceTrack ?? timeline.tracks.find((t) => t.track_type === "audio");
+  const subtitleTrack = voiceTrack ?? timeline.tracks.find((t) => t.track_type === "subtitle");
 
   const visualClips   = visualTrack?.clips  ?? [];
-  const audioClips    = audioTrack?.clips   ?? [];
+  const audioClips    = (audioTrack?.clips   ?? []).filter((c) => !!c.audio_path);
   const subtitleClips = subtitleTrack?.clips ?? [];
 
   const fmtDur = (s: number) => {

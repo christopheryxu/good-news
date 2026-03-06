@@ -35,7 +35,17 @@ async def get_export_status(job_id: str):
         job_id=job.id,
         status=job.status,
         output_path=job.output_path,
+        error=job.error,
+        export_progress=job.export_progress,
     )
+
+
+@router.get("/{job_id}/progress")
+async def get_export_progress(job_id: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"progress": job.export_progress}
 
 
 @router.get("/{job_id}/download")
@@ -55,23 +65,36 @@ async def download_export(job_id: str):
 
 
 async def _do_export(job_id: str) -> None:
+    import asyncio
+    loop = asyncio.get_running_loop()
     job = job_store.get_job(job_id)
     if not job or not job.timeline:
         return
     output_path = settings.jobs_path / job_id / "output.mp4"
+
+    def on_progress(pct: int):
+        job.export_progress = pct
+        job_store.set_job(job)
+        asyncio.run_coroutine_threadsafe(
+            job_store.publish(job_id, {"status": "exporting", "export_progress": pct}),
+            loop,
+        )
+
     try:
-        ok = render_timeline(job.timeline, output_path)
+        ok, error = await asyncio.to_thread(
+            render_timeline, job.timeline, output_path, on_progress
+        )
         if ok:
             job.status = JobStatus.EXPORT_DONE
             job.output_path = str(output_path)
         else:
             job.status = JobStatus.ERROR
-            job.error = "ffmpeg render failed"
+            job.error = error or "ffmpeg render failed"
     except Exception as e:
         job.status = JobStatus.ERROR
         job.error = str(e)
     job_store.set_job(job)
     await job_store.publish(job_id, {
         "status": job.status.value,
-        "progress": 100,
+        "export_progress": 100 if job.status == JobStatus.EXPORT_DONE else job.export_progress,
     })

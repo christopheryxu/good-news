@@ -1,9 +1,12 @@
 from __future__ import annotations
 import base64
+import shutil
 import subprocess
 import json
 import httpx
 from pathlib import Path
+
+from .ffmpeg_service import FFPROBE
 
 
 _BASE = "https://api.elevenlabs.io/v1"
@@ -113,7 +116,7 @@ def probe_duration(audio_path: Path) -> float:
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "quiet", "-print_format", "json",
+                FFPROBE, "-v", "quiet", "-print_format", "json",
                 "-show_streams", str(audio_path),
             ],
             capture_output=True,
@@ -127,7 +130,7 @@ def probe_duration(audio_path: Path) -> float:
                 return float(dur)
         result2 = subprocess.run(
             [
-                "ffprobe", "-v", "quiet", "-print_format", "json",
+                FFPROBE, "-v", "quiet", "-print_format", "json",
                 "-show_format", str(audio_path),
             ],
             capture_output=True,

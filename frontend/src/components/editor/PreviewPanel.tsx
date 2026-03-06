@@ -20,12 +20,13 @@ export default function PreviewPanel({ jobId, height = 340 }: Props) {
   const [activeMediaType, setActiveMediaType] = useState<string>("image");
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Collect all subtitle cues
+  // Collect all subtitle cues from voice track (fallback to legacy subtitle track)
   const allCues: SubtitleCue[] = [];
   if (timeline) {
-    const subTrack = timeline.tracks.find((t) => t.track_type === "subtitle");
-    if (subTrack) {
-      for (const clip of subTrack.clips) {
+    const cueTrack = timeline.tracks.find((t) => t.track_type === "voice")
+      ?? timeline.tracks.find((t) => t.track_type === "subtitle");
+    if (cueTrack) {
+      for (const clip of cueTrack.clips) {
         if (clip.cues) allCues.push(...clip.cues);
       }
     }
@@ -49,16 +50,35 @@ export default function PreviewPanel({ jobId, height = 340 }: Props) {
     }
   }, [currentTime, timeline, jobId]);
 
+  // Track the active visual clip so we can compute seek offset
+  const activeClipRef = useRef<{ start_s: number; duration_s: number } | null>(null);
+  useEffect(() => {
+    if (!timeline) { activeClipRef.current = null; return; }
+    const visualTrack = timeline.tracks.find((t) => t.track_type === "visual");
+    const clip = visualTrack?.clips.find(
+      (c) => currentTime >= c.start_s && currentTime < c.start_s + c.duration_s
+    );
+    activeClipRef.current = clip ? { start_s: clip.start_s, duration_s: clip.duration_s } : null;
+  }, [currentTime, timeline]);
+
   // Play/pause the video element in sync with the timeline
+  // Re-run when isPlaying or activeSrc changes so newly loaded videos auto-play
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (isPlaying) {
+    if (isPlaying && activeSrc) {
+      // Seek to the correct offset within this clip
+      if (activeClipRef.current) {
+        const offset = Math.max(0, currentTime - activeClipRef.current.start_s);
+        if (Math.abs(video.currentTime - offset) > 0.3) {
+          video.currentTime = offset;
+        }
+      }
       video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [isPlaying]);
+  }, [isPlaying, activeSrc]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derive video dimensions from container height (9:16, with padding)
   const videoH = Math.max(80, height - 24);

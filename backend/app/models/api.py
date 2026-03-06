@@ -28,3 +28,5 @@ class ExportStatusResponse(BaseModel):
     job_id: str
     status: JobStatus
     output_path: str | None = None
+    error: str | None = None
+    export_progress: int = 0

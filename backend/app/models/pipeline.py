@@ -52,7 +52,7 @@ class AudioAsset(BaseModel):
 
 class Clip(BaseModel):
     id: str
-    clip_type: Literal["visual", "audio", "subtitle"]
+    clip_type: Literal["visual", "audio", "subtitle", "voice"]
     section_id: str
     start_s: float
     duration_s: float
@@ -68,7 +68,7 @@ class Clip(BaseModel):
 
 class Track(BaseModel):
     id: str
-    track_type: Literal["visual", "audio", "subtitle"]
+    track_type: Literal["visual", "audio", "subtitle", "voice"]
     clips: list[Clip] = Field(default_factory=list)
 
 
@@ -92,3 +92,4 @@ class Job(BaseModel):
     audio_assets: list[AudioAsset] = Field(default_factory=list)
     timeline: Timeline | None = None
     output_path: str | None = None
+    export_progress: int = 0

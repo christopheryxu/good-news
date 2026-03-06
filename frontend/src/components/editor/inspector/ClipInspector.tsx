@@ -12,7 +12,8 @@ import type { Clip } from "@/types/timeline";
 
 function SubtitleFileView() {
   const timeline = useTimelineStore((s) => s.timeline);
-  const subtitleTrack = timeline?.tracks.find((t) => t.track_type === "subtitle");
+  const subtitleTrack = timeline?.tracks.find((t) => t.track_type === "voice")
+    ?? timeline?.tracks.find((t) => t.track_type === "subtitle");
   const clips = subtitleTrack?.clips ?? [];
 
   const handleDownload = () => {
@@ -184,7 +185,7 @@ export default function ClipInspector() {
   if (trackType === "visual" && selectedClip.local_path) {
     filename = selectedClip.local_path.split(/[\\/]/).pop() ?? null;
     if (filename) downloadUrl = getMediaUrl(jobId, "media", filename);
-  } else if (trackType === "audio" && selectedClip.audio_path) {
+  } else if ((trackType === "audio" || trackType === "voice") && selectedClip.audio_path) {
     filename = selectedClip.audio_path.split(/[\\/]/).pop() ?? null;
     if (filename) downloadUrl = getMediaUrl(jobId, "audio", filename);
   }
@@ -238,7 +239,7 @@ export default function ClipInspector() {
         )}
       </div>
 
-      {trackType === "subtitle" && selectedClip.subtitle_text !== undefined && (
+      {(trackType === "subtitle" || trackType === "voice") && selectedClip.subtitle_text !== undefined && (
         <SectionScript
           sectionId={selectedClip.section_id}
           initialScript={selectedClip.subtitle_text}

@@ -17,8 +17,10 @@ export function usePlayback(jobId: string) {
   // updateAudioDurations mutates durations/timings, so rebuilding Howls
   // mid-playback is avoided.
   const audioClipKey = useMemo(() => {
-    const audioTrack = timeline?.tracks.find((t) => t.track_type === "audio");
+    const audioTrack = timeline?.tracks.find((t) => t.track_type === "voice")
+      ?? timeline?.tracks.find((t) => t.track_type === "audio");
     return (audioTrack?.clips ?? [])
+      .filter((c) => !!c.audio_path)
       .map((c) => `${c.id}:${c.audio_path ?? ""}`)
       .join("|");
   }, [timeline]);
@@ -29,7 +31,8 @@ export function usePlayback(jobId: string) {
     howlMapRef.current = new Map();
     if (!timeline) return;
 
-    const audioTrack = timeline.tracks.find((t) => t.track_type === "audio");
+    const audioTrack = timeline.tracks.find((t) => t.track_type === "voice")
+      ?? timeline.tracks.find((t) => t.track_type === "audio");
     if (!audioTrack || audioTrack.clips.length === 0) return;
 
     const sectionDurations: Record<string, number> = {};
@@ -70,7 +73,8 @@ export function usePlayback(jobId: string) {
     startWallRef.current = performance.now();
     startTimeRef.current = currentTime;
 
-    const audioTrack = timeline.tracks.find((t) => t.track_type === "audio");
+    const audioTrack = timeline.tracks.find((t) => t.track_type === "voice")
+      ?? timeline.tracks.find((t) => t.track_type === "audio");
     if (audioTrack) {
       audioTrack.clips.forEach((clip) => {
         const howl = howlMapRef.current.get(clip.id);

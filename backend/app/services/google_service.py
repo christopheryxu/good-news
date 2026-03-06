@@ -23,5 +23,6 @@ async def generate_image(prompt: str, api_key: str, dest_path: Path) -> bool:
         image_bytes = response.generated_images[0].image.image_bytes
         dest_path.write_bytes(image_bytes)
         return True
-    except Exception:
+    except Exception as exc:
+        print(f"[imagen] generate_image failed: {exc}")
         return False

@@ -1,4 +1,5 @@
 export const PIXELS_PER_SECOND = 80;
+export const LABEL_WIDTH = 60; // matches w-[60px] in TrackRow
 
 export function secondsToPixels(seconds: number, pps = PIXELS_PER_SECOND): number {
   return seconds * pps;
