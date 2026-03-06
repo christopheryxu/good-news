@@ -7,39 +7,43 @@ interface Props {
 }
 
 export default function ExportButton({ jobId }: Props) {
-  const { triggerExport, status, downloadUrl, error } = useExport(jobId);
+  const { triggerExport, status, error, exportProgress } = useExport(jobId);
+  const isExporting = status === "exporting" || status === "export_done";
 
   return (
-    <div className="flex flex-col gap-2 items-center">
-      {!downloadUrl && (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-3">
+        {/* Progress bar — visible while exporting, fills to 100 then disappears */}
+        {isExporting && (
+          <div className="flex items-center gap-2">
+            <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#C4842A] rounded-full"
+                style={{
+                  width: `${exportProgress}%`,
+                  transition: exportProgress >= 100
+                    ? "width 0.6s ease-in-out"
+                    : "width 1s linear",
+                }}
+              />
+            </div>
+            <span className="text-xs text-gray-400 whitespace-nowrap">
+              {exportProgress}%
+            </span>
+          </div>
+        )}
+
         <button
           onClick={triggerExport}
-          disabled={status === "exporting"}
-          className="px-5 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+          disabled={isExporting}
+          className="px-4 py-1.5 rounded-lg bg-[#C4842A] hover:bg-[#1A1207] text-white font-semibold text-sm disabled:opacity-50 transition-colors"
         >
-          {status === "exporting" ? "Rendering..." : "Export MP4"}
+          {isExporting ? "Exporting..." : "Export"}
         </button>
-      )}
-
-      {status === "exporting" && (
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <span className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
-          Rendering with ffmpeg...
-        </div>
-      )}
-
-      {downloadUrl && (
-        <a
-          href={downloadUrl}
-          download
-          className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white font-semibold text-sm transition-colors"
-        >
-          Download MP4
-        </a>
-      )}
+      </div>
 
       {error && (
-        <p className="text-red-400 text-xs">{error}</p>
+        <p className="text-red-400 text-xs text-right max-w-xs">{error}</p>
       )}
     </div>
   );

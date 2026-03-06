@@ -1,3 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:ital@1&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Good News Logo animations ─────────────────────────────────────────────── */
+
+.gn-face-circle {
+  fill: #F5C842;
+  stroke: #1A1207;
+  stroke-width: 5;
+  transform-origin: 110px 110px;
+  animation: gn-spin-to-news 2.8s cubic-bezier(0.65,0,0.35,1) infinite;
+}
+.gn-eye {
+  fill: #1A1207;
+  transform-origin: 110px 110px;
+  animation: gn-eyes-fade 2.8s ease infinite;
+}
+.gn-smile {
+  fill: none;
+  stroke: #1A1207;
+  stroke-width: 5;
+  stroke-linecap: round;
+  transform-origin: 110px 110px;
+  animation: gn-smile-fade 2.8s ease infinite;
+}
+.gn-news-body {
+  fill: #FEFAE9;
+  stroke: #1A1207;
+  stroke-width: 5;
+  stroke-linejoin: round;
+  transform-origin: 110px 110px;
+  animation: gn-news-appear 2.8s ease infinite;
+}
+.gn-news-fold {
+  fill: #F0E9CC;
+  stroke: #1A1207;
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+  transform-origin: 110px 110px;
+  animation: gn-news-appear 2.8s ease infinite;
+}
+.gn-news-line {
+  stroke: #C4B483;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 110px 110px;
+  animation: gn-lines-appear 2.8s ease infinite;
+}
+.gn-news-headline {
+  fill: #1A1207;
+  font-family: 'Playfair Display', serif;
+  font-size: 10px;
+  font-weight: 900;
+  transform-origin: 110px 110px;
+  animation: gn-lines-appear 2.8s ease infinite;
+}
+.gn-wordmark-good {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 52px;
+  font-weight: 900;
+  color: #1A1207;
+  letter-spacing: -1px;
+  animation: gn-text-pulse 2.8s ease infinite;
+  line-height: 1;
+}
+.gn-wordmark-news {
+  display: block;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 28px;
+  font-style: italic;
+  color: #C4842A;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-top: 2px;
+  animation: gn-text-pulse 2.8s ease infinite;
+  line-height: 1;
+}
+.gn-rule {
+  display: block;
+  width: 200px;
+  height: 2px;
+  background: #1A1207;
+  margin: 8px auto 0;
+  animation: gn-rule-expand 2.8s ease infinite;
+  transform-origin: center;
+}
+
+@keyframes gn-spin-to-news {
+  0%   { transform: rotate(0deg) scale(1);   opacity: 1; }
+  45%  { transform: rotate(360deg) scale(1); opacity: 1; }
+  58%  { transform: rotate(400deg) scale(0); opacity: 0; }
+  100% { transform: rotate(400deg) scale(0); opacity: 0; }
+}
+@keyframes gn-eyes-fade {
+  0%   { opacity: 1; }
+  45%  { opacity: 1; }
+  55%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes gn-smile-fade {
+  0%   { opacity: 1; }
+  45%  { opacity: 1; }
+  55%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes gn-news-appear {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  58%  { transform: scale(0) rotate(-15deg); opacity: 0; }
+  72%  { transform: scale(1.05) rotate(1deg); opacity: 1; }
+  80%  { transform: scale(1) rotate(0deg);   opacity: 1; }
+  92%  { transform: scale(1) rotate(0deg);   opacity: 1; }
+  100% { transform: scale(0) rotate(10deg);  opacity: 0; }
+}
+@keyframes gn-lines-appear {
+  0%   { opacity: 0; }
+  72%  { opacity: 0; }
+  82%  { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes gn-text-pulse {
+  0%   { opacity: 0.85; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.85; }
+}
+@keyframes gn-rule-expand {
+  0%   { transform: scaleX(0.6); opacity: 0; }
+  30%  { transform: scaleX(1);   opacity: 1; }
+  100% { transform: scaleX(1);   opacity: 1; }
+}
+@keyframes fadeInUp {
+  0%   { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

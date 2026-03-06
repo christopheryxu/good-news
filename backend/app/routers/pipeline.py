@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, PlainTextResponse
 
 from ..config import settings
 from ..models.api import StartPipelineRequest, StartPipelineResponse, JobStatusResponse
@@ -54,6 +54,21 @@ async def get_status(job_id: str):
     )
 
 
+@router.get("/{job_id}/file/{filename}")
+async def get_job_file(job_id: str, filename: str):
+    job = job_store.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    job_dir = settings.jobs_path / job_id
+    file_path = (job_dir / filename).resolve()
+    # Security: must stay inside the job directory
+    if not str(file_path).startswith(str(job_dir.resolve())):
+        raise HTTPException(status_code=403, detail="Access denied")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    return PlainTextResponse(file_path.read_text(encoding="utf-8"))
+
+
 @router.get("/{job_id}/stream")
 async def stream_status(job_id: str):
     job = job_store.get_job(job_id)
@@ -65,6 +80,7 @@ async def stream_status(job_id: str):
         initial = {
             "status": job.status.value,
             "progress": job.progress,
+            "export_progress": job.export_progress,
         }
         if job.timeline:
             initial["timeline"] = job.timeline.model_dump()

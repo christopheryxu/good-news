@@ -1,21 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SkipBack, Play, Pause, SkipForward } from "lucide-react";
 import { useTimelineStore } from "@/store/timelineStore";
-import { usePlayback } from "@/hooks/usePlayback";
 import { getMediaUrl } from "@/lib/api";
 import SubtitleTrack from "./timeline/SubtitleTrack";
 import type { SubtitleCue } from "@/types/timeline";
 
 interface Props {
   jobId: string;
+  height?: number;
 }
 
-export default function PreviewPanel({ jobId }: Props) {
+export default function PreviewPanel({ jobId, height = 340 }: Props) {
   const timeline = useTimelineStore((s) => s.timeline);
   const currentTime = useTimelineStore((s) => s.currentTime);
-  const { play, pause, seek, isPlaying } = usePlayback(jobId);
+  const isPlaying = useTimelineStore((s) => s.isPlaying);
 
   const [activeSrc, setActiveSrc] = useState<string | null>(null);
   const [activeMediaType, setActiveMediaType] = useState<string>("image");
@@ -45,26 +44,32 @@ export default function PreviewPanel({ jobId }: Props) {
       const url = getMediaUrl(jobId, "media", filename);
       setActiveSrc(url);
       setActiveMediaType(activeClip.media_type ?? "image");
+    } else {
+      setActiveSrc(null);
     }
   }, [currentTime, timeline, jobId]);
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!timeline) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    seek(ratio * timeline.total_duration_s);
-  };
+  // Play/pause the video element in sync with the timeline
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isPlaying]);
 
-  const progress =
-    timeline && timeline.total_duration_s > 0
-      ? (currentTime / timeline.total_duration_s) * 100
-      : 0;
+  // Derive video dimensions from container height (9:16, with padding)
+  const videoH = Math.max(80, height - 24);
+  const videoW = Math.round(videoH * 9 / 16);
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Phone frame */}
-      <div className="relative mx-auto bg-black rounded-2xl overflow-hidden border border-gray-600"
-        style={{ width: 216, height: 384 }}>
+    <div className="flex flex-col items-center">
+      <div
+        className="relative bg-black rounded-xl overflow-hidden border-[3px] border-gray-600"
+        style={{ width: videoW, height: videoH }}
+      >
         {activeSrc && activeMediaType === "video" ? (
           <video
             ref={videoRef}
@@ -72,7 +77,7 @@ export default function PreviewPanel({ jobId }: Props) {
             className="w-full h-full object-cover"
             muted
             loop
-            autoPlay
+            playsInline
           />
         ) : activeSrc ? (
           <img
@@ -81,47 +86,9 @@ export default function PreviewPanel({ jobId }: Props) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-500 text-xs">
-            No clip
-          </div>
+          <div className="w-full h-full bg-black" />
         )}
         <SubtitleTrack cues={allCues} />
-      </div>
-
-      {/* Progress bar / scrubber */}
-      <div
-        className="relative h-2 bg-gray-700 rounded cursor-pointer mx-2"
-        onClick={handleSeek}
-      >
-        <div
-          className="absolute top-0 left-0 h-full bg-pink-500 rounded transition-[width]"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Controls */}
-      <div className="flex justify-center items-center gap-2">
-        <button
-          onClick={() => seek(0)}
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-          title="Rewind to start"
-        >
-          <SkipBack size={18} />
-        </button>
-        <button
-          onClick={isPlaying ? pause : play}
-          className="p-2.5 rounded-full text-white bg-pink-600 hover:bg-pink-500 transition-colors"
-          title={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-        </button>
-        <button
-          onClick={() => seek(timeline?.total_duration_s ?? 0)}
-          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
-          title="Skip to end"
-        >
-          <SkipForward size={18} />
-        </button>
       </div>
     </div>
   );

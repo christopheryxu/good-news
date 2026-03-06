@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["geist"],
   // Allow images from Pexels CDN and Stability AI
   images: {
     remotePatterns: [

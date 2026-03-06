@@ -1,18 +1,21 @@
+import GoodNewsLogo from "@/components/landing/GoodNewsLogo";
 import UrlInputForm from "@/components/landing/UrlInputForm";
+import PoweredByTicker from "@/components/landing/PoweredByTicker";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-8">
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent mb-3">
-          Newsletter → TikTok
-        </h1>
-        <p className="text-gray-400 max-w-md">
-          Paste any newsletter URL and we&apos;ll generate a ready-to-post TikTok video with
-          AI generated video, voiceover, and subtitles.
-        </p>
+    <main className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
+      <div className="w-full max-w-xl flex flex-col items-center gap-8">
+        <GoodNewsLogo />
+        <div className="w-full flex flex-col gap-8">
+          <p className="text-gray-500 text-base text-center leading-relaxed animate-fade-in-up">
+            Paste any newsletter URL and we&apos;ll generate a ready-to-post TikTok video with
+            an AI generated voiceover, video content, and subtitles.
+          </p>
+          <UrlInputForm />
+        </div>
+        <PoweredByTicker />
       </div>
-      <UrlInputForm />
     </main>
   );
 }

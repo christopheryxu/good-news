@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Newsletter to TikTok",
+  title: "Good News",
   description: "Transform any newsletter into a TikTok-ready video",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-gray-950 text-white antialiased`}>
+    <html lang="en" className={GeistSans.variable}>
+      <body className="font-sans bg-white text-gray-900 antialiased">
         {children}
       </body>
     </html>

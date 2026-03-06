@@ -1,6 +1,7 @@
 from __future__ import annotations
 import re
 import uuid
+from collections import Counter
 import httpx
 from bs4 import BeautifulSoup, Tag
 
@@ -21,6 +22,68 @@ async def fetch_html(url: str) -> str:
         resp = await client.get(url, headers=_HEADERS)
         resp.raise_for_status()
         return resp.text
+
+
+_PAYWALL_PHRASES = [
+    "this post is for paid subscribers",
+    "subscribe to read",
+    "this article is for subscribers",
+    "become a paid subscriber",
+    "upgrade your subscription",
+    "unlock this post",
+    "subscribers only",
+]
+
+
+_HEX_RE = re.compile(r"#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b")
+
+
+def extract_brand_colors(html: str) -> list[str]:
+    """Return the top brand hex colors found in <style> tags and inline styles.
+
+    Filters out near-white, near-black, and pure grays (common browser defaults),
+    returning up to 8 colors ranked by frequency.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    css_text = " ".join(
+        (tag.string or "")
+        for tag in soup.find_all("style")
+        if tag.string
+    )
+    inline_text = " ".join(
+        tag.get("style", "")
+        for tag in soup.find_all(style=True)
+    )
+
+    raw_colors = _HEX_RE.findall(css_text + " " + inline_text)
+
+    # Normalize to 6-digit uppercase
+    normalized: list[str] = []
+    for c in raw_colors:
+        if len(c) == 3:
+            c = c[0]*2 + c[1]*2 + c[2]*2
+        normalized.append("#" + c.upper())
+
+    def _is_interesting(h: str) -> bool:
+        r, g, b = int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)
+        if r > 240 and g > 240 and b > 240:   return False  # near-white
+        if r < 15  and g < 15  and b < 15:    return False  # near-black
+        if abs(r - g) < 12 and abs(g - b) < 12: return False  # pure gray
+        return True
+
+    counter = Counter(c for c in normalized if _is_interesting(c))
+    return [color for color, _ in counter.most_common(8)]
+
+
+def detect_paywall(html: str) -> bool:
+    """Return True if the page appears to be paywalled or subscriber-only."""
+    soup = BeautifulSoup(html, "html.parser")
+    # Substack uses a <div class="paywall"> element
+    if soup.find(class_="paywall"):
+        return True
+    body_lower = soup.get_text(" ", strip=True).lower()
+    return any(phrase in body_lower for phrase in _PAYWALL_PHRASES)
 
 
 def extract_sections(html: str) -> list[Section]:
@@ -85,7 +148,7 @@ def _try_substack(soup: BeautifulSoup) -> list[Section]:
     container = soup.find(class_="post-content")
     if not container:
         return []
-    return _paragraph_sections(container, source="substack")
+    return _paragraph_sections(container)
 
 
 def _try_beehiiv(soup: BeautifulSoup) -> list[Section]:
@@ -111,7 +174,7 @@ def _try_paragraph_groups(soup: BeautifulSoup, group_size: int = 3) -> list[Sect
     return sections
 
 
-def _paragraph_sections(container: Tag, source: str = "") -> list[Section]:
+def _paragraph_sections(container: Tag) -> list[Section]:
     paras = [p.get_text(" ", strip=True) for p in container.find_all("p") if p.get_text(strip=True)]
     sections: list[Section] = []
     group_size = 3

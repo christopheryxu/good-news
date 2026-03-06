@@ -26,8 +26,8 @@ export default function UrlInputForm() {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-xl flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="url" className="text-sm font-medium text-gray-300">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="url" className="text-sm font-medium text-gray-700">
           Newsletter URL
         </label>
         <input
@@ -37,19 +37,18 @@ export default function UrlInputForm() {
           placeholder="https://example.substack.com/p/your-post"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="w-full rounded-lg bg-gray-800 border border-gray-600 px-4 py-3 text-white placeholder-gray-500 transition-colors duration-300 hover:bg-gray-700 hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#C4842A] focus:border-transparent"
         />
       </div>
 
-
       {error && (
-        <p className="text-red-400 text-sm rounded bg-red-900/30 px-3 py-2">{error}</p>
+        <p className="text-red-500 text-sm rounded-lg bg-red-50 border border-red-200 px-3 py-2">{error}</p>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+        className="rounded-lg bg-[#C4842A] hover:bg-[#1A1207] px-6 py-3 font-semibold text-white disabled:opacity-50 transition-colors"
       >
         {loading ? "Starting pipeline..." : "Generate TikTok Video"}
       </button>

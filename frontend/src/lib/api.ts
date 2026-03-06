@@ -39,7 +39,7 @@ export async function startExport(jobId: string): Promise<void> {
   if (!res.ok) throw new Error(await res.text());
 }
 
-export async function getExportStatus(jobId: string): Promise<{ status: JobStatus; output_path?: string }> {
+export async function getExportStatus(jobId: string): Promise<{ status: JobStatus; output_path?: string; error?: string }> {
   const res = await fetch(`${BASE}/export/${jobId}/status`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
@@ -51,4 +51,8 @@ export function getMediaUrl(jobId: string, type: "audio" | "media", filename: st
 
 export function getDownloadUrl(jobId: string): string {
   return `/api/export/${jobId}/download`;
+}
+
+export function getJobFileUrl(jobId: string, filename: string): string {
+  return `/api/pipeline/${jobId}/file/${encodeURIComponent(filename)}`;
 }

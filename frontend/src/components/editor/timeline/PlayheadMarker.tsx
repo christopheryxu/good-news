@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { secondsToPixels, pixelsToSeconds } from "@/lib/timelineUtils";
+import { secondsToPixels, pixelsToSeconds, LABEL_WIDTH } from "@/lib/timelineUtils";
 import { useTimelineStore } from "@/store/timelineStore";
 
 export default function PlayheadMarker() {
@@ -13,7 +13,6 @@ export default function PlayheadMarker() {
   const currentTimeRef = useRef(currentTime);
   currentTimeRef.current = currentTime;
 
-  const LABEL_WIDTH = 60;
   const x = secondsToPixels(currentTime) + LABEL_WIDTH;
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -58,9 +57,9 @@ export default function PlayheadMarker() {
       onPointerMove={onPointerMove}
     >
       {/* Thin visual line */}
-      <div className="absolute top-0 bottom-0 w-0.5 bg-pink-500 left-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 bottom-0 w-0.5 left-1/2 -translate-x-1/2" style={{ backgroundColor: "#C4842A" }} />
       {/* Circle handle */}
-      <div className="w-2 h-2 bg-pink-500 rounded-full absolute top-0 left-1/2 -translate-x-1/2" />
+      <div className="w-2 h-2 rounded-full absolute top-0 left-1/2 -translate-x-1/2" style={{ backgroundColor: "#C4842A" }} />
     </div>
   );
 }
